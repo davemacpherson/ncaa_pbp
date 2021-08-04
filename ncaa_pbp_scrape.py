@@ -1,4 +1,3 @@
-# Import the required libraries:
 import csv
 from bs4 import BeautifulSoup
 import requests
@@ -6,12 +5,6 @@ import datetime
 import time
 from random import randint
 
-# Name your output files, using today's date in the file names:
-today = "-" + datetime.date.today().strftime("%m-%d")
-filename1 = "ncaa-pbp" + today + ".csv"
-
-# Build a list of all of the games you would like to scrape, using the game IDs found in the schedule:
-event_list = [1990094]
 
 # Assign headers to use with requests.get - this helps to avoid a permissions error
 headers = {
@@ -32,7 +25,7 @@ def find_pbp_id(sched_id):
     '''
     
     # Extracts the HTML from the URL for the specific game:
-    url = "https://stats.ncaa.org/contests/{event_id}/box_score".format(event_id=event_id)
+    url = "https://stats.ncaa.org/contests/{}/box_score".format(sched_id)
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser") 
     
@@ -49,10 +42,8 @@ def find_pbp_id(sched_id):
     
     # Return the PBP game ID
     return pbp_id
-    
-# Run the code for each game in the event_list
-game_no = 0
-while game_no < len(event_list):
+
+def pbp_scrape(game_id, event_list, game_no, filename1):
     event_id = event_list[game_no]
     # Pull the PBP game ID for the specified game
     pbp_game_id = find_pbp_id(event_id)
@@ -95,12 +86,35 @@ while game_no < len(event_list):
     # Write the row data to a CSV file:
     with open(filename1, "a", encoding='utf-16') as f:
         writer = csv.writer(f, delimiter="|")
-        writer.writerows(all_plays)  
-    game_no = game_no + 1
+        writer.writerows(all_plays)      
     
-    # Sleep for a few seconds to avoid overloading the server:
-    time.sleep(randint(2,3))
+def main():
     
-    # Print the event_id and game_no so we can keep track of progress while the code runs:
-    print(event_id)
-    print(game_no)
+    # Build a list of all of the games you would like to scrape, using the game IDs found in the schedule:
+    event_list = [1990094, 1988207]    
+    
+    # Name your output files, using today's date in the file names:
+    today = "-" + datetime.date.today().strftime("%m-%d")
+    filename1 = "ncaa-pbp" + today + ".csv"
+    
+    # Run the code for each game in the event_list
+    game_no = 0
+    
+    while game_no < len(event_list):
+        event_id = event_list[game_no]
+        pbp_scrape(event_id, event_list, game_no, filename1)
+       
+        # Iterate to the next game:
+        game_no = game_no + 1
+        
+        '''
+        # Sleep for a few seconds to avoid overloading the server:
+        time.sleep(randint(2,3))
+        '''
+        
+        # Print the event_id and game_no so we can keep track of progress while the code runs:
+        print(event_id)
+        print(game_no)
+
+if __name__ == '__main__':
+    main()
